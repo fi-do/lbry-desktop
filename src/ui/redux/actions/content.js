@@ -224,7 +224,12 @@ export function doLoadVideo(uri: string, shouldRecordViewEvent: boolean = false,
   };
 }
 
-export function doPurchaseUri(uri: string, saveFile: boolean = false, specificCostInfo?: ?{}, shouldRecordViewEvent?: boolean = false) {
+export function doPurchaseUri(
+  uri: string,
+  saveFile: boolean = false,
+  specificCostInfo?: ?{},
+  shouldRecordViewEvent?: boolean = false
+) {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const balance = selectBalance(state);
@@ -247,7 +252,7 @@ export function doPurchaseUri(uri: string, saveFile: boolean = false, specificCo
       // file manually on their file system, so we need to dispatch a
       // doLoadVideo action to reconstruct the file from the blobs
       if (!fileInfo.download_path || !fileInfo.written_bytes) {
-        dispatch(doLoadVideo(uri, shouldRecordViewEvent, saveFile));
+        dispatch(doLoadVideo(uri, false, saveFile));
       }
 
       Promise.resolve();

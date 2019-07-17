@@ -574,5 +574,18 @@
   "You can generate a new address at any time, and any previous addresses will continue to work.": "You can generate a new address at any time, and any previous addresses will continue to work.",
   "Confirm Claim Revoke": "Confirm Claim Revoke",
   "Are you sure you want to remove this support?": "Are you sure you want to remove this support?",
-  "These credits are permanently yours and can be removed at any time. Removing this support will reduce the claim's discoverability and return the LBC to your spendable balance.": "These credits are permanently yours and can be removed at any time. Removing this support will reduce the claim's discoverability and return the LBC to your spendable balance."
+  "These credits are permanently yours and can be removed at any time. Removing this support will reduce the claim's discoverability and return the LBC to your spendable balance.": "These credits are permanently yours and can be removed at any time. Removing this support will reduce the claim's discoverability and return the LBC to your spendable balance.",
+  "Network and Data Settings": "Network and Data Settings",
+  "Enables saving of all viewed content to your downloads directory. Some file types are saved by default.": "Enables saving of all viewed content to your downloads directory. Some file types are saved by default.",
+  "This is not retroactive, only works from the time it was changed.": "This is not retroactive, only works from the time it was changed.",
+  "Enables saving of hosting data to help the LBRY network.": "Enables saving of hosting data to help the LBRY network.",
+  "If disabled, LBRY will be very sad and you won't be helping improve the network": "If disabled, LBRY will be very sad and you won't be helping improve the network",
+  "Max Connections": "Max Connections",
+  "File Size": "File Size",
+  "Loading stream...": "Loading stream...",
+  "Waiting for stream...": "Waiting for stream...",
+  "Sorry, looks like we can't preview this file.2": "Sorry, looks like we can't preview this file.2",
+  "Requesting stream... not long left now!": "Requesting stream... not long left now!",
+  "This link leads to an external website.": "This link leads to an external website.",
+  "Save file to your library": "Save file to your library"
 }

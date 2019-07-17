@@ -34,7 +34,7 @@ class FileDownloadLink extends React.PureComponent<Props> {
       fileInfo &&
       !fileInfo.completed &&
       fileInfo.status === 'running' &&
-      fileInfo.written_bytes !== false &&
+      fileInfo.written_bytes > 0 &&
       fileInfo.written_bytes < fileInfo.total_bytes
     ) {
       // This calls file list to show the percentage
