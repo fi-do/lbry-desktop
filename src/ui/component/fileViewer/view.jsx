@@ -141,7 +141,7 @@ class FileViewer extends React.PureComponent<Props> {
       playable &&
       fileInfo &&
       ((fileInfo.download_path && fileInfo.written_bytes > 0) ||
-        (fileInfo.blobs_completed === 0 && fileInfo.status === 'running'))
+        (fileInfo.streaming_url))
     ) {
       this.playContent();
     }
@@ -243,8 +243,7 @@ class FileViewer extends React.PureComponent<Props> {
     const isPlaying = playingUri === uri;
     let isReadyToPlay = false;
     // @if TARGET='app'
-    isReadyToPlay =
-      fileInfo && ((fileInfo.download_path && fileInfo.written_bytes > 0) || fileInfo.status === 'running');
+    isReadyToPlay = fileInfo && (fileInfo.written_bytes > 0 || !!fileInfo.streaming_url) ;
     // @endif
     // @if TARGET='web'
     // try to play immediately on web, we don't need to call file_list since we are streaming from reflector

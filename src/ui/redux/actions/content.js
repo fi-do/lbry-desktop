@@ -28,9 +28,9 @@ import { makeSelectClientSetting, selectosNotificationsEnabled } from 'redux/sel
 import analytics from 'analytics';
 import { formatLbryUriForWeb } from 'util/uri';
 
-const DOWNLOAD_POLL_INTERVAL = 250;
+const DOWNLOAD_POLL_INTERVAL = 500;
 
-export function doUpdateLoadStatus(uri: string, outpoint: string) {
+export function doUpdateLoadStatus(uri: string, outpoint: string, saveFile: boolean) {
   // Updates the loading status for a uri as it's downloading
   // Calls file_list and checks the written_bytes value to see if the number has increased
   // Not needed on web as users aren't actually downloading the file
@@ -42,7 +42,7 @@ export function doUpdateLoadStatus(uri: string, outpoint: string) {
         // If a file is already deleted, no point to still try update load status
         const byOutpoint = selectFileInfosByOutpoint(getState());
         if (byOutpoint[outpoint]) {
-          dispatch(doUpdateLoadStatus(uri, outpoint));
+          dispatch(doUpdateLoadStatus(uri, outpoint, saveFile));
         }
       }, DOWNLOAD_POLL_INTERVAL);
 
@@ -51,8 +51,10 @@ export function doUpdateLoadStatus(uri: string, outpoint: string) {
       full_status: true,
     }).then(([fileInfo]) => {
       if (!fileInfo || fileInfo.written_bytes === 0) {
-        // download hasn't started yet
-        setNextStatusUpdate();
+        // download hasn't started yet or it's in streaming mode (don't call file list anymore)
+        if (saveFile || fileInfo.stopped) {
+          setNextStatusUpdate();
+        }
       } else if (fileInfo.completed) {
         const state = getState();
         // TODO this isn't going to get called if they reload the client before
@@ -123,7 +125,7 @@ export function doUpdateLoadStatus(uri: string, outpoint: string) {
   // @endif
 }
 
-export function doStartDownload(uri: string, outpoint: string) {
+export function doStartDownload(uri: string, outpoint: string, saveFile: boolean) {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
 
@@ -133,26 +135,45 @@ export function doStartDownload(uri: string, outpoint: string) {
 
     const { downloadingByOutpoint = {} } = state.fileInfo;
 
-    if (downloadingByOutpoint[outpoint]) return;
+    const { byOutpoint = {} } = state.fileInfo;
 
-    Lbry.file_list({ outpoint, full_status: true }).then(([fileInfo]) => {
+    if (downloadingByOutpoint[outpoint]){
+      Promise.resolve();
+      return;
+    }
+    //
+    if (byOutpoint[outpoint]) && !saveFile)
+    {
       dispatch({
-        type: ACTIONS.DOWNLOADING_STARTED,
+        type: ACTIONS.DOWNLOADING_COMPLETED,
         data: {
           uri,
           outpoint,
-          fileInfo,
+          byOutpoint[outpoint],
         },
       });
+      Promise.resolve();
+      return;
+    }
 
-      dispatch(doUpdateLoadStatus(uri, outpoint));
+    Lbry.file_list({ outpoint, full_status: true }).then(([fileInfo]) => {
+        dispatch({
+          type: ACTIONS.DOWNLOADING_STARTED,
+          data: {
+            uri,
+            outpoint,
+            fileInfo,
+          },
+        });
+
+      dispatch(doUpdateLoadStatus(uri, outpoint, saveFile));
     });
   };
 }
 
-export function doDownloadFile(uri: string, streamInfo: { outpoint: string }) {
+export function doDownloadFile(uri: string, streamInfo: { outpoint: string }, saveFile: boolean) {
   return (dispatch: Dispatch) => {
-    dispatch(doStartDownload(uri, streamInfo.outpoint));
+    dispatch(doStartDownload(uri, streamInfo.outpoint, saveFile));
   };
 }
 
@@ -207,7 +228,18 @@ export function doLoadVideo(uri: string, shouldRecordViewEvent: boolean = false,
         if (timeout) {
           dispatch(handleLoadVideoError(uri, 'timeout'));
         } else {
-          dispatch(doDownloadFile(uri, streamInfo));
+          // streaming mode
+          if (!saveFile){
+            dispatch({
+              type: ACTIONS.DOWNLOADING_STARTED,
+              data: {
+                uri,
+                outpoint: streamInfo.outpoint,
+                streamInfo,
+              },
+            });
+          }
+          dispatch(doDownloadFile(uri, streamInfo, saveFile));
 
           if (shouldRecordViewEvent) {
             analytics.apiLogView(
@@ -245,13 +277,12 @@ export function doPurchaseUri(
         dispatch(doLoadVideo(uri, shouldRecordViewEvent, saveFile));
       }
     }
+    // we may have already fully downloaded the file.
+    if (fileInfo) {
+      // If the completed status is false, the file is not on disk
+      // and we want to reconstruct the file from the blobs / redownload
 
-    // we already fully downloaded the file.
-    if (fileInfo && fileInfo.completed && fileInfo.status === 'stopped') {
-      // If path is null or bytes written is 0 means the user has deleted/moved the
-      // file manually on their file system, so we need to dispatch a
-      // doLoadVideo action to reconstruct the file from the blobs
-      if (!fileInfo.download_path || !fileInfo.written_bytes) {
+      if (!fileInfo.completed && saveFile) {
         dispatch(doLoadVideo(uri, false, saveFile));
       }
 

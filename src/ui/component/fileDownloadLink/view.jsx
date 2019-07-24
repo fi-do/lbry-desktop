@@ -34,9 +34,8 @@ class FileDownloadLink extends React.PureComponent<Props> {
       fileInfo &&
       !fileInfo.completed &&
       fileInfo.status === 'running' &&
-      fileInfo.written_bytes > 0 &&
-      fileInfo.written_bytes < fileInfo.total_bytes
-    ) {
+      (fileInfo.written_bytes > 0 &&
+      fileInfo.written_bytes < fileInfo.total_bytes)) {
       // This calls file list to show the percentage
       restartDownload(uri, fileInfo.outpoint);
     }
@@ -58,14 +57,16 @@ class FileDownloadLink extends React.PureComponent<Props> {
 
     if (loading || downloading) {
       const progress =
-        fileInfo && fileInfo.written_bytes > 0 ? (fileInfo.written_bytes / fileInfo.total_bytes) * 100 : 0;
+        fileInfo && ( fileInfo.written_bytes > 0 ? (fileInfo.written_bytes / fileInfo.total_bytes) * 100 : 0);
       const label =
-        fileInfo && fileInfo.written_bytes > 0
+        fileInfo && ( fileInfo.written_bytes > 0 )
           ? __('Downloading: ') + progress.toFixed(0) + __('% complete')
           : __('Connecting...');
+      console.log("loading:" + loading);
+      console.log("downloading:" + downloading);
 
       return <span className="file-download">{label}</span>;
-    } else if ((fileInfo === null && !downloading) || (fileInfo && !fileInfo.download_path)) {
+    } else if ((fileInfo === null && !downloading) || (fileInfo && (!fileInfo.download_path))) {
       if (!costInfo) {
         return null;
       }

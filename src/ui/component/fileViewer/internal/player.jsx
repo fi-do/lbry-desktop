@@ -154,9 +154,9 @@ class MediaPlayer extends React.PureComponent<Props, State> {
         // @if TARGET='app'
         stream: opts => fs.createReadStream(downloadPath, opts),
         downloadCompleted: downloadPath !== null && downloadCompleted,
+        // @endif
         url: streamingUrl,
         status: fileStatus,
-        // @endif
       };
 
       // Update state
@@ -212,7 +212,7 @@ class MediaPlayer extends React.PureComponent<Props, State> {
     const { mediaType, claim } = this.props;
     const { source } = this.state;
     const isFileType = this.isSupportedFile();
-    const isFileReady = source !== null && isFileType;
+    const isFileReady = source && source.status && isFileType;
     const isPlayableType = this.playableType();
     const { isLoading, loadingStatus } = this.showLoadingScreen(isFileType, isPlayableType);
 
