@@ -137,26 +137,13 @@ export function doStartDownload(uri: string, outpoint: string, saveFile: boolean
 
     const { byOutpoint = {} } = state.fileInfo;
 
-    if (downloadingByOutpoint[outpoint]){
+    if (downloadingByOutpoint[outpoint]) {
       Promise.resolve();
       return;
     }
     //
-    if (byOutpoint[outpoint]) && !saveFile)
-    {
-      dispatch({
-        type: ACTIONS.DOWNLOADING_COMPLETED,
-        data: {
-          uri,
-          outpoint,
-          byOutpoint[outpoint],
-        },
-      });
-      Promise.resolve();
-      return;
-    }
-
-    Lbry.file_list({ outpoint, full_status: true }).then(([fileInfo]) => {
+    if (byOutpoint[outpoint] && !saveFile) {
+      Lbry.file_list({ outpoint, full_status: true }).then(([fileInfo]) => {
         dispatch({
           type: ACTIONS.DOWNLOADING_STARTED,
           data: {
@@ -165,6 +152,20 @@ export function doStartDownload(uri: string, outpoint: string, saveFile: boolean
             fileInfo,
           },
         });
+      });
+      Promise.resolve();
+      return;
+    }
+
+    Lbry.file_list({ outpoint, full_status: true }).then(([fileInfo]) => {
+      dispatch({
+        type: ACTIONS.DOWNLOADING_STARTED,
+        data: {
+          uri,
+          outpoint,
+          fileInfo,
+        },
+      });
 
       dispatch(doUpdateLoadStatus(uri, outpoint, saveFile));
     });
@@ -229,7 +230,7 @@ export function doLoadVideo(uri: string, shouldRecordViewEvent: boolean = false,
           dispatch(handleLoadVideoError(uri, 'timeout'));
         } else {
           // streaming mode
-          if (!saveFile){
+          if (!saveFile) {
             dispatch({
               type: ACTIONS.DOWNLOADING_STARTED,
               data: {
