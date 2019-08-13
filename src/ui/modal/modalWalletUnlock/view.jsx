@@ -20,17 +20,10 @@ type State = {
 
 class ModalWalletUnlock extends React.PureComponent<Props, State> {
   state = {
-    password: null,
+    password: '',
     rememberPassword: false,
   };
 
-  componentDidMount() {
-    keytar.getPassword('LBRY', 'wallet_password').then(p => {
-      if (p || p === '') {
-        this.setState({ password: p });
-      }
-    });
-  }
   componentDidUpdate() {
     const { props } = this;
 
@@ -79,7 +72,7 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
             type="password"
             name="wallet-password"
             onChange={event => this.onChangePassword(event)}
-            value={password}
+            value={password || ''}
           />
           <fieldset-section>
             <FormField

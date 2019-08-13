@@ -9,10 +9,10 @@ type Props = {
   user: {},
   syncEnabled: boolean,
   hasSyncedWallet: boolean,
-  // getSyncIsPending?: boolean,
+  getSyncIsPending?: boolean,
   // setSyncIsPending?: boolean,
   // syncApplyIsPending?: boolean,
-  // syncApplyErrorMessage?: string,
+  syncApplyErrorMessage?: string,
   syncData: string | null,
   syncHash: string | null,
   syncApply: (string | null, string | null, string) => void,
@@ -29,10 +29,10 @@ function WalletSync(props: Props) {
     user,
     syncEnabled,
     hasSyncedWallet,
-    // getSyncIsPending,
+    getSyncIsPending,
     // setSyncIsPending,
-    // syncApplyIsPending,
-    // syncApplyErrorMessage,
+    syncApplyIsPending,
+    syncApplyErrorMessage,
     syncData,
     syncHash,
     syncApply,
@@ -45,6 +45,8 @@ function WalletSync(props: Props) {
   } = props;
 
   const [passwordSaved, setPassword] = useState(null);
+  const [syncStarted, setSyncStarted] = useState(false);
+  const enableSync = !syncEnabled;
 
   useEffect(() => {
     checkSync();
@@ -57,27 +59,47 @@ function WalletSync(props: Props) {
       }
     });
   }, []);
+  //If we tried (syncStarted and no longer pending)
+  useEffect(() => {
+    if (syncStarted && !syncApplyIsPending) {
+      console.log('should be good');
+      if (!syncApplyErrorMessage) {
+        // we good
+        setClientSetting(SETTINGS.ENABLE_SYNC, enableSync);
+        // probably want to set default wallet now (lbryinc)
+      }
+    }
+  }, [syncApplyIsPending, syncStarted, syncApplyErrorMessage]);
 
   function onSyncApply() {
-    if (!walletEncrypted) {
-      console.log(`syncing unencrypted wallet with pass ${passwordSaved}, hash ${syncHash} and data ${syncData}`);
-      syncApply(syncHash, syncData, '');
-    } else if (walletEncrypted && (passwordSaved || passwordSaved === '')) {
-      console.log(`syncing encrypted with pass ${passwordSaved}, hash ${syncHash} and data ${syncData}`);
-      syncApply(syncHash, syncData, passwordSaved);
-    } else if (walletEncrypted && !passwordSaved) {
-      console.log('do the sync password modal');
-      syncWalletModal();
+    const enableSync = !syncEnabled;
+    if (enableSync) {
+      console.log('this');
+      if (!walletEncrypted) {
+        console.log(`syncing unencrypted wallet with pass ${passwordSaved}, hash ${syncHash} and data ${syncData}`);
+        setSyncStarted(true);
+        syncApply(syncHash, syncData, '');
+      } else if (walletEncrypted && (passwordSaved || passwordSaved === '')) {
+        console.log(`syncing encrypted with pass ${passwordSaved}, hash ${syncHash} and data ${syncData}`);
+        setSyncStarted(true);
+        syncApply(syncHash, syncData, passwordSaved);
+      } else if (walletEncrypted && !passwordSaved) {
+        console.log('do the sync password modal');
+        syncWalletModal();
+      }
+    } else {
+      console.log('that');
+      setClientSetting(SETTINGS.ENABLE_SYNC, false);
     }
   }
 
-  function onSyncEnable() {
-    const enableSync = !syncEnabled;
-    if (enableSync) {
-      onSyncApply();
-    }
-    setClientSetting(SETTINGS.ENABLE_SYNC, enableSync);
-  }
+  // function onSyncEnable() {
+  //   const enableSync = !syncEnabled;
+  //   if (enableSync) {
+  //     onSyncApply();
+  //   }
+  //   setClientSetting(SETTINGS.ENABLE_SYNC, enableSync);
+  // }
   const isEmailVerified = user && user.primary_email && user.has_verified_email;
   return (
     <section className="card card--section">
@@ -94,15 +116,14 @@ function WalletSync(props: Props) {
           type="checkbox"
           name="sync_enabled"
           checked={syncEnabled}
-          disabled={!isEmailVerified}
-          onChange={() => onSyncEnable()}
+          disabled={!isEmailVerified || getSyncIsPending}
+          error={!!syncApplyErrorMessage && syncApplyErrorMessage}
+          onChange={onSyncApply}
           label={__('Enable Sync')}
         />
         {!hasSyncedWallet && <h2>Not synced</h2>}
         {hasSyncedWallet && <h2>Wallet synced</h2>}
         <h2>{String(syncEnabled)}</h2>
-        <Button button="primary" label={__('Check sync')} onClick={() => checkSync()} />
-        <Button button="primary" label={__('SyncApply')} onClick={() => onSyncApply('abcd1234')} />
       </div>
     </section>
   );
