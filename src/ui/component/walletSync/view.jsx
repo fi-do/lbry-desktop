@@ -8,10 +8,10 @@ import * as SETTINGS from 'constants/settings';
 type Props = {
   user: {},
   syncEnabled: boolean,
-  hasSyncedWallet: boolean,
+  // hasSyncedWallet: boolean,
   getSyncIsPending?: boolean,
   // setSyncIsPending?: boolean,
-  // syncApplyIsPending?: boolean,
+  syncApplyIsPending?: boolean,
   syncApplyErrorMessage?: string,
   syncData: string | null,
   syncHash: string | null,
@@ -22,13 +22,14 @@ type Props = {
   setClientSetting: (string, boolean | string) => void,
   walletEncrypted: boolean,
   syncWalletModal: () => void,
+  isPasswordSaved: boolean,
 };
 
 function WalletSync(props: Props) {
   const {
     user,
     syncEnabled,
-    hasSyncedWallet,
+    // hasSyncedWallet, // would be nice if we coul
     getSyncIsPending,
     // setSyncIsPending,
     syncApplyIsPending,
@@ -38,13 +39,14 @@ function WalletSync(props: Props) {
     syncApply,
     // getSync,
     checkSync,
-    setDefaultAccount,
+    // setDefaultAccount, // we may or may not need to do this
     setClientSetting,
     walletEncrypted,
     syncWalletModal,
+    isPasswordSaved,
   } = props;
 
-  const [passwordSaved, setPassword] = useState(null);
+  const [password, setPassword] = useState(null);
   const [syncStarted, setSyncStarted] = useState(false);
   const enableSync = !syncEnabled;
 
@@ -54,12 +56,14 @@ function WalletSync(props: Props) {
 
   useEffect(() => {
     keytar.getPassword('LBRY', 'wallet_password').then(p => {
-      if (p || p === '') {
+      if (p) {
         setPassword(p);
+      } else {
+        setPassword('');
       }
     });
-  }, []);
-  //If we tried (syncStarted and no longer pending)
+  }, [isPasswordSaved]);
+
   useEffect(() => {
     if (syncStarted && !syncApplyIsPending) {
       console.log('should be good');
@@ -76,14 +80,14 @@ function WalletSync(props: Props) {
     if (enableSync) {
       console.log('this');
       if (!walletEncrypted) {
-        console.log(`syncing unencrypted wallet with pass ${passwordSaved}, hash ${syncHash} and data ${syncData}`);
+        console.log(`syncing unencrypted wallet with pass ${password}, hash ${syncHash} and data ${syncData}`);
         setSyncStarted(true);
         syncApply(syncHash, syncData, '');
-      } else if (walletEncrypted && (passwordSaved || passwordSaved === '')) {
-        console.log(`syncing encrypted with pass ${passwordSaved}, hash ${syncHash} and data ${syncData}`);
+      } else if (walletEncrypted && (password || password === '')) {
+        console.log(`syncing encrypted with pass ${password}, hash ${syncHash} and data ${syncData}`);
         setSyncStarted(true);
-        syncApply(syncHash, syncData, passwordSaved);
-      } else if (walletEncrypted && !passwordSaved) {
+        syncApply(syncHash, syncData, password);
+      } else if (walletEncrypted && !isPasswordSaved) {
         console.log('do the sync password modal');
         syncWalletModal();
       }
@@ -93,17 +97,15 @@ function WalletSync(props: Props) {
     }
   }
 
-  // function onSyncEnable() {
-  //   const enableSync = !syncEnabled;
-  //   if (enableSync) {
-  //     onSyncApply();
-  //   }
-  //   setClientSetting(SETTINGS.ENABLE_SYNC, enableSync);
-  // }
   const isEmailVerified = user && user.primary_email && user.has_verified_email;
   return (
     <section className="card card--section">
-      <h2 className="card__title">{__('Wallet Sync')}</h2>
+      <h2 className="card__title">
+        {__('Wallet Sync')}
+        {'  '}
+        <span className="badge badge--alert">ALPHA</span>
+      </h2>
+
       <div className="card__content">
         {!isEmailVerified && (
           <p className="card__subtitle">
@@ -118,12 +120,15 @@ function WalletSync(props: Props) {
           checked={syncEnabled}
           disabled={!isEmailVerified || getSyncIsPending}
           error={!!syncApplyErrorMessage && syncApplyErrorMessage}
+          helper={!!syncApplyErrorMessage && syncApplyErrorMessage}
           onChange={onSyncApply}
           label={__('Enable Sync')}
         />
-        {!hasSyncedWallet && <h2>Not synced</h2>}
-        {hasSyncedWallet && <h2>Wallet synced</h2>}
-        <h2>{String(syncEnabled)}</h2>
+        <p className="card__subtitle card__help ">
+          {__(
+            'You must use the same password as your other devices. You may need to unencrypt and reencrypt using that password above.'
+          )}
+        </p>
       </div>
     </section>
   );

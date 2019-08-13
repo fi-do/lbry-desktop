@@ -51,7 +51,7 @@ type Props = {
   hideBalance: boolean,
   confirmForgetPassword: () => void,
   isPasswordSaved: boolean,
-  setPasswordSaved: () => void,
+  setPasswordSaved: boolean => void,
 };
 
 type State = {
@@ -386,11 +386,7 @@ class SettingsPage extends React.PureComponent<Props, State> {
                   name="encrypt_wallet"
                   onChange={() => this.onChangeEncryptWallet()}
                   checked={walletEncrypted}
-                  label={
-                    this.state.storedPassword
-                      ? __('Encrypt my wallet with a custom password (Password saved)')
-                      : __('Encrypt my wallet with a custom password')
-                  }
+                  label={__('Encrypt my wallet with a custom password')}
                   helper={
                     <React.Fragment>
                       {__('Secure your local wallet data with a custom password.')}{' '}
@@ -401,8 +397,12 @@ class SettingsPage extends React.PureComponent<Props, State> {
                 />
                 {isPasswordSaved && (
                   <p className="card__subtitle card__help">
-                    {__('Your password is saved.')}
-                    <Button button="link" label={__('Unsave')} onClick={() => this.onConfirmForgetPassword()} />.
+                    {__('Your password is saved in your OS keychain.')}{' '}
+                    <Button
+                      button="link"
+                      label={__('I want to type it manually')}
+                      onClick={this.onConfirmForgetPassword}
+                    />
                   </p>
                 )}
                 <FormField

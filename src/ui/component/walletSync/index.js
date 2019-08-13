@@ -16,6 +16,7 @@ import {
   selectUser,
 } from 'lbryinc';
 import { doNotifySyncWallet } from 'redux/actions/app';
+import { selectIsPasswordSaved } from 'redux/selectors/app';
 import { selectWalletIsEncrypted } from 'lbry-redux';
 import { doSetClientSetting } from 'redux/actions/settings';
 import { makeSelectClientSetting } from 'redux/selectors/settings';
@@ -34,6 +35,7 @@ const select = (state, props) => ({
   syncData: selectSyncData(state),
   syncHash: selectSyncHash(state),
   walletEncrypted: selectWalletIsEncrypted(state),
+  isPasswordSaved: selectIsPasswordSaved(state),
 });
 
 const perform = dispatch => ({
