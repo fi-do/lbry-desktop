@@ -1,6 +1,13 @@
 import { connect } from 'react-redux';
 import * as settings from 'constants/settings';
-import { doClearCache, doNotifyEncryptWallet, doNotifyDecryptWallet } from 'redux/actions/app';
+import {
+  doClearCache,
+  doNotifyEncryptWallet,
+  doNotifyDecryptWallet,
+  doNotifyForgetPassword,
+  doPasswordSaved,
+} from 'redux/actions/app';
+import { selectIsPasswordSaved } from 'redux/selectors/app';
 import { doSetDaemonSetting, doSetClientSetting, doGetThemes, doChangeLanguage } from 'redux/actions/settings';
 import {
   makeSelectClientSetting,
@@ -28,6 +35,7 @@ const select = state => ({
   supportOption: makeSelectClientSetting(settings.SUPPORT_OPTION)(state),
   userBlockedChannelsCount: selectBlockedChannelsCount(state),
   hideBalance: makeSelectClientSetting(settings.HIDE_BALANCE)(state),
+  isPasswordSaved: selectIsPasswordSaved(state),
 });
 
 const perform = dispatch => ({
@@ -39,6 +47,8 @@ const perform = dispatch => ({
   encryptWallet: () => dispatch(doNotifyEncryptWallet()),
   decryptWallet: () => dispatch(doNotifyDecryptWallet()),
   updateWalletStatus: () => dispatch(doWalletStatus()),
+  confirmForgetPassword: modalProps => dispatch(doNotifyForgetPassword(modalProps)),
+  setPasswordSaved: saved => dispatch(doPasswordSaved(saved)),
 });
 
 export default connect(

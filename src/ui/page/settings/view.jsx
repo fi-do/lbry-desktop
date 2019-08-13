@@ -8,6 +8,8 @@ import Button from 'component/button';
 import Page from 'component/page';
 import FileSelector from 'component/common/file-selector';
 import UnsupportedOnWeb from 'component/common/unsupported-on-web';
+import WalletSync from 'component/walletSync';
+import keytar from 'keytar';
 
 type Price = {
   currency: string,
@@ -47,10 +49,14 @@ type Props = {
   supportOption: boolean,
   userBlockedChannelsCount?: number,
   hideBalance: boolean,
+  confirmForgetPassword: () => void,
+  isPasswordSaved: boolean,
+  setPasswordSaved: () => void,
 };
 
 type State = {
   clearingCache: boolean,
+  storedPassword: boolean,
 };
 
 class SettingsPage extends React.PureComponent<Props, State> {
@@ -59,6 +65,7 @@ class SettingsPage extends React.PureComponent<Props, State> {
 
     this.state = {
       clearingCache: false,
+      storedPassword: false,
     };
 
     (this: any).onKeyFeeChange = this.onKeyFeeChange.bind(this);
@@ -73,6 +80,13 @@ class SettingsPage extends React.PureComponent<Props, State> {
   componentDidMount() {
     this.props.getThemes();
     this.props.updateWalletStatus();
+    keytar.getPassword('LBRY', 'wallet_password').then(p => {
+      if (p || p === '') {
+        this.props.setPasswordSaved(true);
+      } else {
+        this.props.setPasswordSaved(false);
+      }
+    });
   }
 
   onKeyFeeChange(newValue: Price) {
@@ -119,6 +133,11 @@ class SettingsPage extends React.PureComponent<Props, State> {
     }
   }
 
+  onConfirmForgetPassword() {
+    const { confirmForgetPassword } = this.props;
+    confirmForgetPassword();
+  }
+
   setDaemonSetting(name: string, value: ?SetDaemonSettingArg): void {
     this.props.setDaemonSetting(name, value);
   }
@@ -156,6 +175,7 @@ class SettingsPage extends React.PureComponent<Props, State> {
       supportOption,
       hideBalance,
       userBlockedChannelsCount,
+      isPasswordSaved,
     } = this.props;
 
     const noDaemonSettings = !daemonSettings || Object.keys(daemonSettings).length === 0;
@@ -366,7 +386,11 @@ class SettingsPage extends React.PureComponent<Props, State> {
                   name="encrypt_wallet"
                   onChange={() => this.onChangeEncryptWallet()}
                   checked={walletEncrypted}
-                  label={__('Encrypt my wallet with a custom password')}
+                  label={
+                    this.state.storedPassword
+                      ? __('Encrypt my wallet with a custom password (Password saved)')
+                      : __('Encrypt my wallet with a custom password')
+                  }
                   helper={
                     <React.Fragment>
                       {__('Secure your local wallet data with a custom password.')}{' '}
@@ -375,7 +399,12 @@ class SettingsPage extends React.PureComponent<Props, State> {
                     </React.Fragment>
                   }
                 />
-
+                {isPasswordSaved && (
+                  <p className="card__subtitle card__help">
+                    {__('Your password is saved.')}
+                    <Button button="link" label={__('Unsave')} onClick={() => this.onConfirmForgetPassword()} />.
+                  </p>
+                )}
                 <FormField
                   type="checkbox"
                   name="hide_balance"
@@ -385,7 +414,7 @@ class SettingsPage extends React.PureComponent<Props, State> {
                 />
               </Form>
             </section>
-
+            <WalletSync />
             <section className="card card--section">
               <h2 className="card__title">{__('Experimental Settings')}</h2>
 

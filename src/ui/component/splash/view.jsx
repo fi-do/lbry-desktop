@@ -8,6 +8,7 @@ import ModalIncompatibleDaemon from 'modal/modalIncompatibleDaemon';
 import ModalUpgrade from 'modal/modalUpgrade';
 import ModalDownloading from 'modal/modalDownloading';
 import 'css-doodle';
+import keytar from 'keytar';
 
 const FORTY_FIVE_SECONDS = 45 * 1000;
 
@@ -21,6 +22,10 @@ type Props = {
   modal: ?{
     id: string,
   },
+  unlockWallet: string => void,
+  syncData: string | null,
+  syncHash: string | null,
+  syncEnabled: boolean,
 };
 
 type State = {
@@ -30,6 +35,9 @@ type State = {
   error: boolean,
   isRunning: boolean,
   launchWithIncompatibleDaemon: boolean,
+  password: string | null,
+  unlockingWallet: boolean,
+  syncingWallet: boolean,
 };
 
 export default class SplashScreen extends React.PureComponent<Props, State> {
@@ -43,6 +51,9 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
       error: false,
       launchWithIncompatibleDaemon: false,
       isRunning: false,
+      password: null,
+      unlockingWallet: false,
+      syncingWallet: false,
     };
 
     (this: any).renderModals = this.renderModals.bind(this);
@@ -68,6 +79,12 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
           ),
         });
       });
+
+    keytar.getPassword('LBRY', 'wallet_password').then(p => {
+      if (p || p === '') {
+        this.setState({ password: p });
+      }
+    });
   }
 
   componentDidUpdate() {
@@ -99,7 +116,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
   }
 
   updateStatusCallback(status: StatusResponse) {
-    const { notifyUnlockWallet, authenticate, modal } = this.props;
+    const { notifyUnlockWallet, authenticate, modal, unlockWallet, syncEnabled } = this.props;
     const { launchedModal } = this.state;
 
     if (status.connection_status.code !== 'connected') {
@@ -120,9 +137,12 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
       if (this.timeout) {
         clearTimeout(this.timeout);
       }
-
+      // try to unlock and sync with stored password
+      if (this.state.password || this.state.password === '') {
+        unlockWallet(this.state.password);
+      }
       // Make sure there isn't another active modal (like INCOMPATIBLE_DAEMON)
-      if (launchedModal === false && !modal) {
+      else if (launchedModal === false && !modal) {
         this.setState({ launchedModal: true }, () => notifyUnlockWallet());
       }
     } else if (status.is_running) {

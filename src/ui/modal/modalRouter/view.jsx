@@ -27,7 +27,9 @@ import ModalConfirmThumbnailUpload from 'modal/modalConfirmThumbnailUpload';
 import ModalWalletEncrypt from 'modal/modalWalletEncrypt';
 import ModalWalletDecrypt from 'modal/modalWalletDecrypt';
 import ModalWalletUnlock from 'modal/modalWalletUnlock';
+import ModalWalletSync from 'modal/modalWalletSync';
 import ModalRewardCode from 'modal/modalRewardCode';
+import ModalPasswordUnsave from 'modal/modalPasswordUnsave';
 
 type Props = {
   modal: { id: string, modalProps: {} },
@@ -100,6 +102,10 @@ function ModalRouter(props: Props) {
       return <ModalWalletDecrypt {...modalProps} />;
     case MODALS.WALLET_UNLOCK:
       return <ModalWalletUnlock {...modalProps} />;
+    case MODALS.WALLET_PASSWORD_UNSAVE:
+      return <ModalPasswordUnsave {...modalProps} />;
+    case MODALS.WALLET_SYNC:
+      return <ModalWalletSync {...modalProps} />;
     case MODALS.REWARD_GENERATED_CODE:
       return <ModalRewardCode {...modalProps} />;
     default:

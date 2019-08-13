@@ -19,6 +19,7 @@ import {
   filteredReducer,
   homepageReducer,
   statsReducer,
+  syncReducer,
 } from 'lbryinc';
 import appReducer from 'redux/reducers/app';
 import availabilityReducer from 'redux/reducers/availability';
@@ -50,4 +51,5 @@ export default history =>
     blocked: blockedReducer,
     user: userReducer,
     wallet: walletReducer,
+    sync: syncReducer,
   });
